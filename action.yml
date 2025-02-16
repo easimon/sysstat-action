@@ -1,34 +1,18 @@
 name: 'Sysstat Action'
 description: 'Collect system stats while running Github Actions workflows'
-inputs:
-  step:
-    description: 'Step to execute: one of launch, graph, cleanup'
-    required: true
+#inputs:
+#  step:
+#    description: 'Step to execute: one of launch, graph, cleanup'
+#    required: true
 runs:
-  using: "composite"
-  steps:
-    - name: "Launch SAR daemon in background"
-      if: inputs.step == 'launch'
-      shell: bash
-      run: |
-        "${{ github.action_path }}/launch.sh"
-
-    - name: "Create SAR graphs and markdown"
-      id: create-sar-graph
-      if: inputs.step == 'graph'
-      shell: bash
-      run: |
-        "${{ github.action_path }}/graph.sh" 
-    - name: "Upload graph as artifact"
-      if: inputs.step == 'graph'
-      uses: actions/upload-artifact@v4
-      with:
-        name: sar-report
-        path: build/sar-report/*
-        if-no-files-found: error
-
-    - name: "Clean up SAR daemon and temporary files"
-      if: inputs.step == 'cleanup'
-      shell: bash
-      run: |
-        "${{ github.action_path }}/cleanup.sh" 
+  using: 'node20'
+  main: 'index.js'
+  post: 'post.js'
+  
+#    - name: "Upload graph as artifact"
+#      if: inputs.step == 'graph'
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: sar-report
+#        path: build/sar-report/*
+#        if-no-files-found: error

@@ -21,7 +21,7 @@ function img_gnuplot_file {
 
   sadf -d "$datafile" -O skipempty -- "$@" -z > .sar.csv
   filename="${gpfile}-$(uuidgen).svg"
-  content="$(gnuplot -c "${SCRIPT_DIR}/gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks --pretty 0 --nsclean -)"
+  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks --pretty 0 --nsclean -)"
 
   echo "$content" > "${workdir}/${filename}"
 
@@ -34,7 +34,8 @@ function img_gnuplot {
   shift
 
   sadf -d "$datafile" -O skipempty -- "$@" -z > .sar.csv
-  content="$(gnuplot -c "${SCRIPT_DIR}/gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks --pretty 0 --nsclean -)"
+  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --nowrap --dropdtd --noblanks --pretty 0 --nsclean -)"
+  #content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu")"
 
   rm -f ".sar.csv"
   echo "$content"
@@ -52,8 +53,9 @@ function rep {
 }
 
 function img {
+  file="$(img_gnuplot_file "$@")"
   filecontent="$(img_gnuplot "$@")"
-  rep "$filecontent"
+  rep "![$file]($file)"
 }
 
 function header {
@@ -99,3 +101,5 @@ if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
   sadf -d "$datafile" -O skipempty -- -z >> $GITHUB_STEP_SUMMARY
   echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 fi
+
+"${SCRIPT_DIR}/cleanup.sh"
