@@ -6,8 +6,8 @@ description: 'Collect system stats while running Github Actions workflows'
 #    required: true
 runs:
   using: 'node20'
-  main: 'index.js'
-  post: 'post.js'
+  main: 'dist/index.js'
+  post: 'dist/post.js'
   
 #    - name: "Upload graph as artifact"
 #      if: inputs.step == 'graph'

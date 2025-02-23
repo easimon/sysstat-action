@@ -10,35 +10,24 @@ fi
 
 datafile="$SAR_DATAFILE"
 workdir="./build/sar-report"
-reportfile="${workdir}/REPORT.md"
+reportfile="${workdir}/index.html"
 
-mkdir -p "$workdir"
-rm -f "$workdir/"*
+rm -rf "$workdir"
+mkdir -p "$workdir/images"
 
 function img_gnuplot_file {
   gpfile="$1"
   shift
 
   sadf -d "$datafile" -O skipempty -- "$@" -z > .sar.csv
-  filename="${gpfile}-$(uuidgen).svg"
-  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks --pretty 0 --nsclean -)"
+  filename="images/${gpfile}-$(uuidgen).svg"
+#  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu")" # no xml minification
+  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks -)" # with xml minification
 
   echo "$content" > "${workdir}/${filename}"
 
   rm -f ".sar.csv"
   echo "${filename}"
-}
-
-function img_gnuplot {
-  gpfile="$1"
-  shift
-
-  sadf -d "$datafile" -O skipempty -- "$@" -z > .sar.csv
-  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --nowrap --dropdtd --noblanks --pretty 0 --nsclean -)"
-  #content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu")"
-
-  rm -f ".sar.csv"
-  echo "$content"
 }
 
 function sadf_iter {
@@ -48,25 +37,33 @@ function sadf_iter {
   sadf -d "$datafile" -O skipempty -- "$@" -z | tail -n +2 | cut -d ';' -f $col | sort | uniq
 }
 
+function reptruncate {
+  echo -n "" > "$reportfile"
+}
+
 function rep {
   echo "$@" >> "$reportfile"
 }
 
 function img {
   file="$(img_gnuplot_file "$@")"
-  filecontent="$(img_gnuplot "$@")"
-  rep "![$file]($file)"
+  rep "<img src=\"$file\" />"
 }
 
 function header {
   header="$1"
-  rep "## $header"
+  rep "<h2>$header</h2>"
+  rep
+}
+
+function header3 {
+  header="$1"
+  rep "<h3>$header</h3>"
   rep
 }
 
 function sectionbody {
   img "$@"
-  rep
 }
 
 function section {
@@ -76,8 +73,31 @@ function section {
   sectionbody "$@"
 }
 
-echo "# Sysstat report " > "$reportfile"
-rep 
+function reporthead {
+  reptruncate
+  rep "<html>"
+  rep "<head>"
+  rep "<title>System report</title>"
+  rep "<link href=\"https://fonts.googleapis.com/css2?family=News+Cycle:wght@400;700&display=swap\" rel=\"stylesheet\">"
+  rep "<style>"
+  rep "body {
+    font-family: 'News Cycle', serif;
+    font-size: 14px;
+    color: #2f2f2f;
+    background-color: #f9f7f1;
+  }"
+  rep "</style>"
+  rep "</head>"
+  rep "<body>"
+  rep "<h1>System report</h1>"
+}
+
+function reportfoot {
+  rep "</body>"
+  rep "</html>"
+}
+
+reporthead
 
 section "CPU" cpu -u ALL -P all
 section "System Load" load -q LOAD
@@ -86,20 +106,23 @@ section "Memory Consumption" memory -r
 header "Network"
 sectionbody net-ip4 -n IP
 sectionbody net-ip6 -n IP6
-# todo: section "Disk" -d
+
+header "Disk utilization"
+# TODO: section "Disk" -d
+#header3 "Disk usage $disk"
+sectionbody block-bytes -b
+sectionbody block-tps -b
 
 header "Filesystem usage"
 for disk in $(sadf_iter 4 -F); do
+  header3 "Disk usage $disk"
   sectionbody filesystem -F --fs="$disk"
 done 
 
-if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
-  cat "$reportfile" >> $GITHUB_STEP_SUMMARY
+reportfoot
 
-  echo "# data"
-  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-  sadf -d "$datafile" -O skipempty -- -z >> $GITHUB_STEP_SUMMARY
-  echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-fi
+#if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+#  cat "$reportfile" >> $GITHUB_STEP_SUMMARY
+#fi
 
 "${SCRIPT_DIR}/cleanup.sh"

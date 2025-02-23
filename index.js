@@ -1,13 +1,12 @@
-const { spawn } = require("child_process");
+const { runActionScript } = require("./run")
 
-function run(cmd) {
-  const cmdWithPath = `${__dirname}/${cmd}`
-  console.log(`Executing ${cmdWithPath}`)
-  const subprocess = spawn(cmdWithPath, { stdio: "inherit", shell: true });
-  subprocess.on("exit", (exitCode) => {
-    process.exitCode = exitCode;
-  });
-}
-
-console.log("main")
-run("scripts/launch.sh")
+runActionScript("../scripts/launch.sh")
+  .catch((error) => { 
+    if (Number.isInteger(error.message)) {
+      process.exitCode = error.message 
+    }
+    else {
+      console.error(error.message)
+      process.exitCode = 1
+    }
+  })

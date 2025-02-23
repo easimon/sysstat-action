@@ -1,0 +1,42 @@
+
+*** These modified files were found in JOE when it aborted on Sun Feb 23 18:17:15 2025
+*** JOE was aborted because the terminal closed
+
+*** File '(Unnamed)'
+System.out
+System.out
+${INTERVAL}
+
+*** File '(Unnamed)'
+reset
+cx_write(PAD_CTRL, 0x00500300);
+cx_write(PAD_CTRL, 0x00500300);
+reg = cx_read(PAD_CTRL);
+V=1
+pathfix
+local
+90
+90s
+baghi
+
+*** File '(Unnamed)'
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+/home/mdobel/dev/sysstat-action/.git/COMMIT_EDITMSG
+
+*** File '* Startup Log *'
+Warning: /etc/joe/joerc is newer than your /home/mdobel/.joerc.
+Processing '/home/mdobel/.joerc'...
+Processing '/etc/joe/joerc'...
+Processing '/etc/joe/ftyperc'...
+Finished processing /etc/joe/ftyperc
+Finished processing /etc/joe/joerc
+Finished processing /home/mdobel/.joerc
