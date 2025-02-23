@@ -9,10 +9,13 @@ set xtics rotate
 set key left
 set grid
 
-set title "CPU Utilization"
+set title "Block Device IOPs"
 set xlabel "Time (UTC)"
-set ylabel "% Utilization"
-plot for [i=5:13:1] \
-    datafile using 3:(sum [col=i:13] column(col)) \
+set ylabel "IOP / sec"
+
+# -b columns
+# # hostname;interval;timestamp;tps;rtps;wtps;dtps;bread/s;bwrtn/s;bdscd/s
+plot for [i=5:6:1] \
+    datafile using 3:(column(i)) \
     title columnheader(i) \
     with lines lw 2

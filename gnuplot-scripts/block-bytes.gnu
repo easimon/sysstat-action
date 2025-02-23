@@ -9,10 +9,13 @@ set xtics rotate
 set key left
 set grid
 
-set title "CPU Utilization"
+set title "Block Device Bandwidth"
 set xlabel "Time (UTC)"
-set ylabel "% Utilization"
-plot for [i=5:13:1] \
-    datafile using 3:(sum [col=i:13] column(col)) \
+set ylabel "MB / sec"
+
+# -b columns
+# # hostname;interval;timestamp;tps;rtps;wtps;dtps;bread/s;bwrtn/s;bdscd/s
+plot for [i=8:9:1] \
+    datafile using 3:(column(i) * 512 / 1024 / 1024) \
     title columnheader(i) \
     with lines lw 2

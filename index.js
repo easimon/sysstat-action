@@ -1,13 +1,11 @@
-const { spawn } = require("child_process");
+const { runActionScript, transformError } = require("./functions")
 
-function run(cmd) {
-  const cmdWithPath = `${__dirname}/${cmd}`
-  console.log(`Executing ${cmdWithPath}`)
-  const subprocess = spawn(cmdWithPath, { stdio: "inherit", shell: true });
-  subprocess.on("exit", (exitCode) => {
-    process.exitCode = exitCode;
-  });
+async function main() {
+  try {
+    await runActionScript("../scripts/launch.sh")
+  } catch (error) {
+    transformError(error)
+  }
 }
 
-console.log("main")
-run("scripts/launch.sh")
+main()

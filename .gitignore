@@ -1,5 +1,6 @@
-/sardata
+/sardata*
 /sar_report.md
 /saroptions.md
 /.work
 /build/
+/node_modules/

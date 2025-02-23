@@ -9,10 +9,15 @@ set xtics rotate
 set key left
 set grid
 
-set title "CPU Utilization"
+device = system("tail -1 .sar.csv | cut -f 4 -d';'")
+
+set title "Network traffic " . device
 set xlabel "Time (UTC)"
-set ylabel "% Utilization"
-plot for [i=5:13:1] \
-    datafile using 3:(sum [col=i:13] column(col)) \
+set ylabel "kBytes / sec"
+
+# -n DEV columns
+# hostname;interval;timestamp;IFACE;rxpck/s;txpck/s;rxkB/s;txkB/s;rxcmp/s;txcmp/s;rxmcst/s;%ifutil
+plot for [i=7:8:1] \
+    datafile using 3:i \
     title columnheader(i) \
     with lines lw 2
