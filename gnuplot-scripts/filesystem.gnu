@@ -4,15 +4,15 @@ set datafile commentschar ""
 set datafile separator ";"
 set timefmt "%Y-%m-%d %H:%M:%S"
 set xdata time
-set terminal svg size 800,400 fixed background rgb 'white'
+set terminal svg size 800,400 fixed background rgb '#f6eee3'
 set xtics rotate
-set key right
+set key left
 set grid
 
 filesystem = system("tail -1 .sar.csv | cut -f 4 -d';'")
 
 set title "Filesystem usage " . filesystem
-set xlabel "Time"
+set xlabel "Time (UTC)"
 set ylabel "GB"
 
 # -F columns
