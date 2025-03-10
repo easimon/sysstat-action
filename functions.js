@@ -1,4 +1,4 @@
-const { spawn } = require("child_process");
+const { spawn } = require("child_process")
 
 export function transformError(error) {
   console.error("External process returned error: " + error.message)

@@ -11,7 +11,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */   runShellCommand: () => (/* binding */ runShellCommand),
 /* harmony export */   transformError: () => (/* binding */ transformError)
 /* harmony export */ });
-const { spawn } = __nccwpck_require__(35317);
+const { spawn } = __nccwpck_require__(35317)
 
 function transformError(error) {
   console.error("External process returned error: " + error.message)
@@ -135729,7 +135729,6 @@ async function getJobStats() {
       per_page: pageSize
     }
 
-    console.info(`Request Params: ${JSON.stringify(requestParams)}`)
     const jobsResult = await octokit.rest.actions.listJobsForWorkflowRun(requestParams)
     if (!jobsResult || !jobsResult.data || !jobsResult.data.jobs) {
       console.warn(`Unexpected listJobs result: ${JSON.stringify(jobsResult)}`)
@@ -135746,11 +135745,12 @@ async function getJobStats() {
 
     if (currentJob) {
       const now = new Date().toISOString()
-      return currentJob.steps.map(step => ({ 
+      return currentJob.steps.map((step, index) => ({
+        rownum: index, 
         number: step.number,
         name: step.name,
         started_at: step.started_at || now,
-        completed_at: step.completed_at || step.started_at || now,
+        completed_at: step.completed_at || now,
         conclusion: step.conclusion || "not concluded yet",
         status: step.status,
       }))
@@ -135765,11 +135765,10 @@ async function getJobStats() {
 }
 
 async function createJobStatsData() {
-  const builddir = process.env.SAR_BUILDDIR
   const stats = await getJobStats()
 
   const csv = json2csv(stats)
-  await writeFile(`${builddir}/jobstats.csv`, csv)
+  await writeFile('.job.csv', csv)
 }
 
 async function post() {

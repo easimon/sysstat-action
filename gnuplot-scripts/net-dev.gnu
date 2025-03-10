@@ -4,6 +4,7 @@ set datafile commentschar ""
 set datafile separator ";"
 set timefmt "%Y-%m-%d %H:%M:%S"
 set xdata time
+set format x "%H:%M:%S"
 set terminal svg size 800,400 fixed background rgb '#f6eee3'
 set xtics rotate
 set key left

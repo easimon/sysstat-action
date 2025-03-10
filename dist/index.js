@@ -11,7 +11,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */   runShellCommand: () => (/* binding */ runShellCommand),
 /* harmony export */   transformError: () => (/* binding */ transformError)
 /* harmony export */ });
-const { spawn } = __nccwpck_require__(317);
+const { spawn } = __nccwpck_require__(317)
 
 function transformError(error) {
   console.error("External process returned error: " + error.message)

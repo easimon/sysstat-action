@@ -14,19 +14,34 @@ fi
 datafile="$SAR_DATAFILE"
 workdir="$SAR_BUILDDIR"
 reportfile="${workdir}/index.html"
+eth_blacklist=("veth.*" "br-.*" "docker0")
 
 mkdir -p "$workdir/images"
+mkdir -p "$workdir/csv"
+
+function img_csv_gnuplot_file {
+  gpfile="$1"
+  csvfilein="$2"
+  uuid="$(uuidgen)"
+
+  filename="images/${gpfile}-${uuid}.svg"
+  csvfilename="csv/${gpfile}-${uuid}.csv"
+
+  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks -)" # with xml compaction
+
+  cp "${csvfilein}" "${workdir}/${csvfilename}"
+  echo "$content" > "${workdir}/${filename}"
+
+  echo "${filename}"
+}
 
 function img_gnuplot_file {
   gpfile="$1"
   shift
 
   sadf -d "$datafile" -O skipempty -- "$@" -z > .sar.csv
-  filename="images/${gpfile}-$(uuidgen).svg"
-#  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu")" # no xml compaction
-  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks -)" # with xml compaction
 
-  echo "$content" > "${workdir}/${filename}"
+  filename="$(img_csv_gnuplot_file "$gpfile" .sar.csv)"
 
   rm -f ".sar.csv"
   echo "${filename}"
@@ -49,6 +64,11 @@ function rep {
 
 function img {
   file="$(img_gnuplot_file "$@")"
+  rep "<p><img src=\"$file\" /></p>"
+}
+
+function img_csv {
+  file="$(img_csv_gnuplot_file "$@")"
   rep "<p><img src=\"$file\" /></p>"
 }
 
@@ -111,7 +131,22 @@ header "Network"
 sectionbody net-ip4 -n IP
 #sectionbody net-ip6 -n IP6
 
+function matcheslist {
+  str="$1"
+  shift
+
+  for pattern in "${@}"; do
+    if [[ "$str" =~ $pattern ]]; then
+      return 0
+    fi 
+  done 
+  return 1 
+}
+
 for dev in $(sadf_iter 4 -n DEV); do
+  if matcheslist "$dev" "${eth_blacklist[@]}"; then 
+    continue
+  fi
   header3 "Network bytes $dev"
   sectionbody net-dev -n DEV --iface="$dev"
 done 
@@ -127,6 +162,9 @@ for disk in $(sadf_iter 4 -F); do
   header3 "Disk usage $disk"
   sectionbody filesystem -F --fs="$disk"
 done 
+
+header "Job graph"
+img_csv job .job.csv
 
 reportfoot
 
