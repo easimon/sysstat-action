@@ -10,15 +10,13 @@ const core = require('@actions/core');
 async function uploadArtifacts() {
   const root = `${process.env['SAR_BUILDDIR']}/`
   const files = globSync('/**', { root: root, nodir: true })
-  const artifact = new DefaultArtifactClient()
-  const artifactsuffix = Math.floor(Math.random() * 100)
   console.log(`Files to archive: [${files.join(", ")}]`)
-  return artifact.uploadArtifact(
-    // todo: this is a hack to circumvent conflicts on re-runs
-    `sysstat-report-${artifactsuffix}`,
-    files,
-    root
-  )
+  let artifactName = core.getInput('report_artifact_name')
+  if (artifactName === '') {
+    const suffix = Math.floor(Math.random() * 100)
+    artifactName = `sysstat-report-${suffix}`
+  }
+  return new DefaultArtifactClient().uploadArtifact(artifactName, files, root)
 }
 
 async function getJobStats() {
