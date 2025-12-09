@@ -5,9 +5,15 @@ inputs:
     description: "GitHub Access Token"
     default: ${{ github.token }}
     required: false
-  report_artifact_name:
-    description: "Name of the artifact that should be attached to the workflow"
+  report_artifact_prefix:
+    description: "Prefix of the artifact name that's attached to the workflow (should be distinct for each job that uses the action)"
     required: false
+    default: "sysstat-report"
+  report_artifact_suffix:
+    description: "Suffix of the artifact name that's attached to the workflow (should be distinct for each pipeline run)"
+    required: false
+    default: ${{ github.run_attempt }}
+
 runs:
   using: 'node20'
   main: 'dist/index.js'

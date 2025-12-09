@@ -11,11 +11,9 @@ async function uploadArtifacts() {
   const root = `${process.env['SAR_BUILDDIR']}/`
   const files = globSync('/**', { root: root, nodir: true })
   console.log(`Files to archive: [${files.join(", ")}]`)
-  let artifactName = core.getInput('report_artifact_name')
-  if (artifactName === '') {
-    const suffix = Math.floor(Math.random() * 100)
-    artifactName = `sysstat-report-${suffix}`
-  }
+  const artifactPrefix = core.getInput('report_artifact_prefix')
+  const artifactSuffix = core.getInput('report_artifact_suffix')
+  const artifactName = `${artifactPrefix}-${artifactSuffix}`
   return new DefaultArtifactClient().uploadArtifact(artifactName, files, root)
 }
 
