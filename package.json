@@ -16,5 +16,8 @@
     "@actions/github": "^6.0.0",
     "glob": "^11.0.1",
     "json-2-csv": "^5.5.9"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.4"
   }
 }
