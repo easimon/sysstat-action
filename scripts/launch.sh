@@ -4,7 +4,8 @@ set -euo pipefail
 
 if [ -n "${GITHUB_ENV:-}" ]; then
   echo "Installing necessary tools for sar"
-  sudo apt-get update && sudo apt-get install -y sysstat libxml2-utils gnuplot
+#  sudo apt-get update && sudo apt-get install -y sysstat libxml2-utils gnuplot-nox
+  sudo apt-get update && sudo apt-get install -y sysstat gnuplot-nox
 fi
 
 interval=10

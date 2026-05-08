@@ -27,7 +27,8 @@ function img_csv_gnuplot_file {
   filename="images/${gpfile}-${uuid}.svg"
   csvfilename="csv/${gpfile}-${uuid}.csv"
 
-  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks -)" # with xml compaction
+  # content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu" | xmllint --noblanks -)" # with xml compaction, requires libxml2-utils
+  content="$(gnuplot -c "${SCRIPT_DIR}/../gnuplot-scripts/${gpfile}.gnu")" # without xml compaction
 
   cp "${csvfilein}" "${workdir}/${csvfilename}"
   echo "$content" > "${workdir}/${filename}"
@@ -138,18 +139,18 @@ function matcheslist {
   for pattern in "${@}"; do
     if [[ "$str" =~ $pattern ]]; then
       return 0
-    fi 
-  done 
-  return 1 
+    fi
+  done
+  return 1
 }
 
 for dev in $(sadf_iter 4 -n DEV); do
-  if matcheslist "$dev" "${eth_blacklist[@]}"; then 
+  if matcheslist "$dev" "${eth_blacklist[@]}"; then
     continue
   fi
   header3 "Network bytes $dev"
   sectionbody net-dev -n DEV --iface="$dev"
-done 
+done
 
 header "Disk utilization"
 # TODO: section "Disk" -d
@@ -161,7 +162,7 @@ header "Filesystem usage"
 for disk in $(sadf_iter 4 -F); do
   header3 "Disk usage $disk"
   sectionbody filesystem -F --fs="$disk"
-done 
+done
 
 header "Job graph"
 img_csv job .job.csv
