@@ -15,10 +15,10 @@ inputs:
     default: ${{ github.run_attempt }}
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
   post: 'dist/post.js'
-  
+
 #    - name: "Upload graph as artifact"
 #      if: inputs.step == 'graph'
 #      uses: actions/upload-artifact@v4
