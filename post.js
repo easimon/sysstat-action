@@ -9,8 +9,21 @@ import * as core from "@actions/core";
 const writeFile = promises.writeFile;
 
 async function uploadArtifacts() {
-  const root = `${process.env["SAR_BUILDDIR"]}/`;
+  // Both of these mean there is no report, not that something went wrong: the launch step may have
+  // been cancelled before sar started, or graph.sh may have bailed out. Uploading anyway throws -
+  // on a missing root directory, or on an empty file list - and that turns a missing diagnostic
+  // into a failed job, which is the one thing this action should never do.
+  const builddir = process.env["SAR_BUILDDIR"];
+  if (!builddir) {
+    console.log("SAR_BUILDDIR is unset, there is no report to upload.");
+    return;
+  }
+  const root = `${builddir}/`;
   const files = globSync("/**", { root: root, nodir: true });
+  if (files.length === 0) {
+    console.log(`No files below ${root}, skipping the upload.`);
+    return;
+  }
   console.log(`Files to archive: [${files.join(", ")}]`);
   const artifactPrefix = core.getInput("report_artifact_prefix");
   const artifactSuffix = core.getInput("report_artifact_suffix");

@@ -2,10 +2,21 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 if [ -n "${GITHUB_ENV:-}" ]; then
-  echo "Installing necessary tools for sar"
-#  sudo apt-get update && sudo apt-get install -y sysstat libxml2-utils gnuplot-nox
-  sudo apt-get update && sudo apt-get install -y sysstat gnuplot-nox
+  # Only sar is needed to collect; gnuplot is installed by the post step, which is where it draws.
+  # Keeping it out of here means a slow package mirror delays the report instead of the whole build.
+  # shellcheck source=install-packages.sh
+  . "${SCRIPT_DIR}/install-packages.sh"
+  ensure_command sar sysstat || echo "::warning:: could not install sysstat"
+fi
+
+# Without sar there is nothing to collect, and writing the SAR_* variables anyway would tell the post
+# step that a run exists - it would then fail on a missing data file instead of skipping quietly.
+if ! command -v sar > /dev/null 2>&1; then
+  echo "::warning:: sar is not available, skipping system statistics for this job."
+  exit 0
 fi
 
 interval=10

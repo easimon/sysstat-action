@@ -4,11 +4,20 @@ set -euo pipefail
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-if [ -z "${SAR_DATAFILE:-}" ]; then
-  echo "::error:: SAR_DATAFILE unset."
+# These are set by launch.sh once sar is running. Missing means the launch step never got that far -
+# it was cancelled, or timed out while installing. Reporting that and stopping is the whole job here:
+# reading them anyway under `set -u` aborts with an unbound variable and fails the step, which turns a
+# missing diagnostic into a failed build.
+if [ -z "${SAR_DATAFILE:-}" ] || [ -z "${SAR_BUILDDIR:-}" ]; then
+  echo "::warning:: sar was never started, skipping the report."
+  exit 0
 fi
-if [ -z "${SAR_BUILDDIR:-}" ]; then
-  echo "::error:: SAR_BUILDDIR unset."
+
+# shellcheck source=install-packages.sh
+. "${SCRIPT_DIR}/install-packages.sh"
+if ! ensure_command gnuplot gnuplot-nox; then
+  echo "::warning:: gnuplot is unavailable, skipping the report."
+  exit 0
 fi
 
 datafile="$SAR_DATAFILE"
