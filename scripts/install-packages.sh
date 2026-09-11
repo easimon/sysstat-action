@@ -1,54 +1,52 @@
 #!/usr/bin/env bash
 
-# Installs packages that are not already present.
+# Installs a package only when the command it provides is missing, and keeps apt from stalling a job.
 #
-# Runner images ship sysstat, and often gnuplot too, so the common case does no package work at all.
-# When something is missing, the install is tried against the existing package lists first and only
-# falls back to refreshing them - `apt-get update` talks to every configured repository and is by far
-# the slowest part: on one run it took 13m40s while downloading the 38 MB of packages from the same
-# host took 9s. Recommends are skipped; for gnuplot-nox alone they pull in imagemagick, ghostscript,
-# groff and a font chain that nothing here uses.
+# The check is on the command rather than the package: gnuplot-nox conflicts with gnuplot-x11 and
+# gnuplot-qt, so asking apt for it on a machine that already has one of those has it swap the user's
+# package out on every run. `command -v gnuplot` is also what graph.sh actually needs.
+#
+# `apt-get update` is only reached when an install has already failed against the current lists. It is
+# the slow part: on one measured run it took 13m40s while downloading the 38 MB of packages from the
+# same host took 9s, and 5 of its 25 fetches held 813 of those 816 seconds while the median fetch took
+# 0.12s. Acquire::http::Timeout cuts a connection that goes quiet. Retries is set to 1 rather than left
+# at apt's default of 3, since a stalled fetch would otherwise be waited out four times over.
+# Acquire::Languages=none drops the translation files, roughly a third of the requests and of no use
+# here. The outer `timeout` bounds whatever those do not cover - a partial list is acceptable, because
+# the install that follows decides whether it was enough.
 
-# A refresh that has to happen is bounded twice over. On the run above, 5 of 24 fetches stalled and
-# accounted for 813 of its 816 seconds, while the median fetch took 0.12s - the mirror was fine, single
-# connections were not. Acquire::http::Timeout caps each of those; Acquire::Retries gets the item on a
-# second attempt rather than leaving the list incomplete; Acquire::Languages=none skips the
-# translation files, which were a quarter of the requests and are of no use here. The outer `timeout`
-# is the backstop for whatever those options do not cover: a partial list is fine, since the install
-# that follows decides whether it was enough.
-APT_UPDATE_TIMEOUT="${APT_UPDATE_TIMEOUT:-120}"
+APT_TIMEOUT="${APT_TIMEOUT:-120}"
 
-function apt_update {
-  # timeout inside sudo, not around it: the other way the signal goes to sudo and apt-get keeps
-  # running as root, holding its locks.
-  sudo timeout "${APT_UPDATE_TIMEOUT}" apt-get update \
+function apt_get {
+  local rc=0
+  sudo DEBIAN_FRONTEND=noninteractive timeout --kill-after=10 "${APT_TIMEOUT}" apt-get "$@" \
     -o Acquire::http::Timeout=15 \
-    -o Acquire::https::Timeout=15 \
-    -o Acquire::Retries=3 \
-    -o Acquire::Languages=none \
-    || echo "::warning:: apt-get update did not finish within ${APT_UPDATE_TIMEOUT}s, continuing anyway"
+    -o Acquire::Retries=1 \
+    -o Acquire::Languages=none || rc=$?
+
+  # 124 is timeout's own exit code. Every other non-zero status is apt's and means something else.
+  if [ "$rc" -eq 124 ] || [ "$rc" -eq 137 ]; then
+    echo "::warning:: apt-get $1 did not finish within ${APT_TIMEOUT}s"
+  fi
+  return "$rc"
 }
 
-function install_packages {
-  local missing=()
-  local package
-  for package in "$@"; do
-    if ! dpkg-query --show --showformat='${db:Status-Status}' "$package" 2>/dev/null | grep -q '^installed$'; then
-      missing+=("$package")
-    fi
-  done
+# ensure_command <command> <package>... - installs the packages if the command is not already there.
+function ensure_command {
+  local command_name="$1"
+  shift
 
-  if [ ${#missing[@]} -eq 0 ]; then
-    echo "Already installed: $*"
+  if command -v "$command_name" > /dev/null 2>&1; then
+    echo "$command_name is already available"
     return 0
   fi
 
-  echo "Installing ${missing[*]}"
-  if sudo apt-get install -y --no-install-recommends "${missing[@]}"; then
+  echo "Installing $* to provide $command_name"
+  if apt_get install -y --no-install-recommends "$@"; then
     return 0
   fi
 
   echo "Install failed, refreshing package lists and retrying"
-  apt_update
-  sudo apt-get install -y --no-install-recommends "${missing[@]}"
+  apt_get update || true
+  apt_get install -y --no-install-recommends "$@"
 }

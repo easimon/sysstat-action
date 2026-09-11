@@ -15,7 +15,7 @@ fi
 
 # shellcheck source=install-packages.sh
 . "${SCRIPT_DIR}/install-packages.sh"
-if ! install_packages gnuplot-nox; then
+if ! ensure_command gnuplot gnuplot-nox; then
   echo "::warning:: gnuplot is unavailable, skipping the report."
   exit 0
 fi
