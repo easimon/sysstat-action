@@ -2,10 +2,14 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 if [ -n "${GITHUB_ENV:-}" ]; then
-  echo "Installing necessary tools for sar"
-#  sudo apt-get update && sudo apt-get install -y sysstat libxml2-utils gnuplot-nox
-  sudo apt-get update && sudo apt-get install -y sysstat gnuplot-nox
+  # Only sar is needed to collect; gnuplot is installed by the post step, which is where it draws.
+  # Keeping it out of here means a slow package mirror delays the report instead of the whole build.
+  # shellcheck source=install-packages.sh
+  . "${SCRIPT_DIR}/install-packages.sh"
+  install_packages sysstat || echo "::warning:: could not install sysstat, sar may not start."
 fi
 
 interval=10
